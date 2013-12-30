@@ -50,21 +50,21 @@
 static List *binfiles = NULL;
 
 
-#define open_error(f)					\
-	{						\
-		char __err[64];				\
-		sprintf(__err, "open : %s", f);		\
-		perror(__err);				\
-		exit_error();				\
+#define open_error(f)				\
+	{					\
+		char __err[64];			\
+		sprintf(__err, "open : %s", f);	\
+		perror(__err);			\
+		exit_error();			\
 	}
 
-#define exit_error()					\
-	  {						\
-		  ListElmt *e;				\
-		  foreach(binfiles, e)			\
-		      unlink(e->data);			\
-							\
-		  _exit(EXIT_FAILURE);			\
+#define exit_error()				\
+	  {					\
+		  ListElmt *e;			\
+		  foreach(binfiles, e)		\
+		      unlink(e->data);		\
+						\
+		  _exit(EXIT_FAILURE);		\
 	  }
 
 
