@@ -1,3 +1,11 @@
+/* 
+ * 
+ * list.c  - A simple implementation of linked list and some functions
+ * 
+ * by Joao Guilherme aka plankton__
+ * 
+ */
+
 #include "list.h"
 #include <stdlib.h>
 
@@ -44,3 +52,4 @@ int  list_rem(List *list){
 
 	return 0;
 }
+
