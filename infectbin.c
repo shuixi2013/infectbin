@@ -255,6 +255,11 @@ void infect_bin(const char *pathname){
 		}
 		
 		read(fd_target, ebuf, EHDR_SIZE);
+		if (memcmp(ehdr->e_ident, ELFMAG, SELFMAG) != 0) {
+			fprintf(stderr, "File %s is not ELF\n", pathname);
+			exit_error();
+		}
+		
 		lseek(fd_target, ehdr->e_shoff + SHDR_SIZE, SEEK_SET);
 
 		for(i = ehdr->e_shnum; i > 0; i--){
