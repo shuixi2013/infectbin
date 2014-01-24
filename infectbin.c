@@ -1,26 +1,24 @@
 /*
-
-  infectbin.c
-  
-  Joao Guilherme Victorino aka plankton__
-  jg.victorino1 [at] gmail
-
-  This program is free software: you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by
-  the Free Software Foundation, either version 3 of the License, or
-  (at your option) any later version.
-
-  This program is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-  GNU General Public License for more details.
-
-  You should have received a copy of the GNU General Public License
-  along with this program. If not, see <http://www.gnu.org/licenses/>.
-
+* 	infectbin.c  
+* 
+* 	Joao Guilherme Victorino aka plankton__
+* 	jg.victorino1 [at] gmail
+* 
+* 	This program is free software: you can redistribute it and/or modify
+* 	it under the terms of the GNU General Public License as published by
+* 	the Free Software Foundation, either version 3 of the License, or
+* 	(at your option) any later version.
+* 
+* 	This program is distributed in the hope that it will be useful,
+* 	but WITHOUT ANY WARRANTY; without even the implied warranty of
+* 	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+* 	GNU General Public License for more details.
+* 
+* 	You should have received a copy of the GNU General Public License
+* 	along with this program. If not, see <http://www.gnu.org/licenses/>.
+* 
 */
   
-    
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -28,6 +26,8 @@
 #include <fcntl.h>
 #include <sys/types.h>
 #include <elf.h>
+#include <link.h>
+#include <errno.h>
 #include "easyptrace.h"
 #include "list.h"
 
@@ -39,8 +39,8 @@
 #define AS_FLAGS	"-o"
 #define OBJ_FLAGS	"--output-target=binary"
 
-#define MAX_OFFSET	0xffffffff
-#define MAX_OFFNAME	10
+#define MAX_OFFSET	0xffffffffffffffff
+#define MAX_OFFNAME	18
 #define OFFBASE		16
 
 #define ASSUFIX		".s"
@@ -50,24 +50,32 @@
 static List *binfiles = NULL;
 
 
-#define open_error(f)				\
-	{					\
-		char __err[64];			\
-		sprintf(__err, "open : %s", f);	\
-		perror(__err);			\
-		exit_error();			\
+#define open_error(f)					\
+{							\
+		char __err[64];				\
+		sprintf(__err, "open : %s", f);		\
+		perror(__err);				\
+		exit_error();				\
 	}
 
-#define exit_error()				\
-	  {					\
-		  ListElmt *e;			\
-		  foreach(binfiles, e)		\
-		      unlink(e->data);		\
-						\
-		  _exit(EXIT_FAILURE);		\
+#define exit_error()					\
+	  {						\
+		  ListElmt *e;				\
+		  foreach(binfiles, e)			\
+		      unlink(e->data);			\
+							\
+		  _exit(EXIT_FAILURE);			\
 	  }
 
+#define __malloc(var, size){						\
+		if((var = malloc(size)) == NULL){			\
+				fprintf(stderr, "malloc falhou :/\n");	\
+				exit_error();				\
+		}							\
+	}
 
+	  
+	  
 void __assemble(char *input, char *output){
 	int status;
 	
@@ -75,8 +83,8 @@ void __assemble(char *input, char *output){
 		char *argv[] = {ASSEMBLER, input, AS_FLAGS, output, NULL};
 		execv(ASSEMBLER, argv);
 
-		printf("execv falhou :/\n");
-		exit(-1);
+		fprintf(stderr, "execv has failed :/\n");
+		exit(EXIT_FAILURE);
 	}
 	wait(&status);
 	if(status){
@@ -92,8 +100,8 @@ void __copy_text(char *input, char *output){
 		char *argv[] = {OBJCOPY, OBJ_FLAGS, input, output, NULL};
 		execv(OBJCOPY, argv);
 
-		printf("execv falhou :/\n");
-		exit(-1);
+		fprintf(stderr, "execv has failed :/\n");
+		exit(EXIT_FAILURE);
 	}
 
 	wait(&status);
@@ -108,7 +116,7 @@ void __make_binfile(int fd_input){
 	char c, offname[MAX_OFFNAME], asname[MAX_OFFNAME + sizeof(ASSUFIX)], objname[MAX_OFFNAME + sizeof(OBJSUFIX)], *binname;
 
 	
-	//descarta '0' e 'x' a esquerda
+	//drop '0' e 'x'
  	for(c = '0'; c == '0' || c == 'x' || c == 'X'; read(fd_input, &c, 1))
 	;
 	
@@ -118,7 +126,7 @@ void __make_binfile(int fd_input){
 
 	do{
 		if(i == MAX_OFFNAME){
-			printf("error: offset %s... to long\n", offname);
+			fprintf(stderr, "error: offset %s... to long\n", offname);
 			_exit(EXIT_FAILURE);
 		}
 		  
@@ -133,7 +141,7 @@ void __make_binfile(int fd_input){
 	strncpy(objname, offname, strlen(offname));
 	strcat(objname, OBJSUFIX);
 	
-	binname = malloc(strlen(offname));
+	__malloc(binname, strlen(offname));
 	strncpy(binname, offname, strlen(offname));
 		
 	if((fdasfile = open(asname, O_RDWR | O_CREAT | O_TRUNC, 0666)) < 0)
@@ -185,7 +193,12 @@ void infect_pid(pid_t pid){
 		if((fd_bin = open(e->data, O_RDONLY)) < 0)
 			open_error(e->data);
 
+		errno = 0;
 		off = (unsigned long *) strtoul(e->data, NULL, OFFBASE);
+		if(errno){
+			fprintf(stderr, "strtoul has failed :/\n");
+			exit_error();
+		}
 
 		while((n = read(fd_bin, (char *) &opcode, sizeof(long))) > 0){
 			word = ptrace_peektext(pid, off);
@@ -204,19 +217,21 @@ void infect_pid(pid_t pid){
 	ptrace_detach(pid);
 }
 
-#define EHDR_SIZE	52
-#define SHDR_SIZE	40
+
 void infect_bin(const char *pathname){
+	#define EHDR_SIZE	sizeof(ElfW(Ehdr))
+	#define SHDR_SIZE	sizeof(ElfW(Shdr))
+	
 	int fd_target, fd_bin, i;
 	unsigned long off;
+	unsigned char opcode;
 	ListElmt *e;
 
 	char ebuf[EHDR_SIZE];
 	char sbuf[SHDR_SIZE];
 	
-	Elf32_Ehdr *ehdr = (Elf32_Ehdr *) ebuf;
-	Elf32_Shdr *shdr = (Elf32_Shdr *) sbuf;
-	unsigned char opcode;
+	ElfW(Ehdr) *ehdr = (ElfW(Ehdr) *) ebuf;
+	ElfW(Shdr) *shdr = (ElfW(Shdr) *) sbuf;
 
 	printf("[*] Open %s to path\n", pathname);
 	if((fd_target = open(pathname, O_RDWR)) < 0)
@@ -232,7 +247,12 @@ void infect_bin(const char *pathname){
 		if((fd_bin = open(e->data, O_RDONLY)) < 0)
 			open_error(e->data);
 
+		errno = 0;
 		off = strtoul(e->data, NULL, OFFBASE);
+		if(errno){
+			fprintf(stderr, "strtoul has failed :/\n");
+			exit_error();
+		}
 		
 		read(fd_target, ebuf, EHDR_SIZE);
 		lseek(fd_target, ehdr->e_shoff + SHDR_SIZE, SEEK_SET);
@@ -271,7 +291,7 @@ void usage(){
 
 
 int main(int argc, char *argv[]){
-	binfiles = (List *) malloc(sizeof(List));
+	__malloc(binfiles, sizeof(List));
 	list_init(binfiles, free);
 
 	if(argc < 3)
