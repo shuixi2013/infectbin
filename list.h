@@ -1,12 +1,6 @@
 #ifndef LIST_H
 #define LIST_H
 
-/* 
- * A simple implementation of linked list and some functions
- * 
- *  by Joao Guilherme aka plankton__
- */
-
 
 typedef struct ListElmt_{
 	void 		 *data;
