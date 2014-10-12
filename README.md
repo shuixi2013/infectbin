@@ -1,7 +1,7 @@
 infectbin
 =========
 
-Infectbin is a tool created for the purpose of study that allows us to change instructions in a ELF file.
+Infectbin is a tool that allows changing the instructions in a ELF file.
 
 You can modify a runtime process, with some caveats:  
 - you must have permission. In general, the process should be yours.
@@ -27,4 +27,5 @@ Script is a file in the following format:
 - The opcodes are inserted in the specified offsets.
 - Support x86 and x86_64 [require test]
 
-Questions, bugs and suggestions: jg.victorino1 [at] gmail
+Joao Guilherme aka pl4nkt0n
+jg.victorino1 [at] gmail
