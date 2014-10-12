@@ -2,7 +2,7 @@
  * 
  * list.c  - A simple implementation of linked list and some functions
  * 
- * by Joao Guilherme aka plankton__
+ * Joao Guilherme aka pl4nkt0n
  * 
  */
 
