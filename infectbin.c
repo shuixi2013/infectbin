@@ -1,8 +1,8 @@
 /*
 * 	infectbin.c  
 * 
-* 	Joao Guilherme Victorino aka plankton__
-* 	jg.victorino1 [at] gmail
+* 	Joao Guilherme Victorino aka pl4nkt0n
+* 	jgvictorino1 [at] gmail
 * 
 * 	This program is free software: you can redistribute it and/or modify
 * 	it under the terms of the GNU General Public License as published by
@@ -50,33 +50,31 @@
 static List *binfiles = NULL;
 
 
-#define open_error(f)					\
-{							\
-		char __err[64];				\
-		sprintf(__err, "open : %s", f);		\
-		perror(__err);				\
+#define open_error(f){				\
+	char __err[64];				\
+	sprintf(__err, "open : %s", f);		\
+	perror(__err);				\
+	exit_error();				\
+}
+
+#define exit_error(){				\
+	ListElmt *e;				\
+		foreach(binfiles, e)		\
+		      unlink(e->data);		\
+						\
+	exit(EXIT_FAILURE);			\
+}
+
+#define __malloc(var, size){				\
+	if((var = malloc(size)) == NULL){		\
+		fprintf(stderr, "malloc failed :/\n");	\
 		exit_error();				\
-	}
-
-#define exit_error()					\
-	  {						\
-		  ListElmt *e;				\
-		  foreach(binfiles, e)			\
-		      unlink(e->data);			\
-							\
-		  _exit(EXIT_FAILURE);			\
-	  }
-
-#define __malloc(var, size){						\
-		if((var = malloc(size)) == NULL){			\
-				fprintf(stderr, "malloc falhou :/\n");	\
-				exit_error();				\
-		}							\
-	}
+	}						\
+}
 
 	  
 	  
-void __assemble(char *input, char *output){
+static void __assemble(char *input, char *output){
 	int status;
 	
 	if(fork() == 0){
@@ -93,7 +91,7 @@ void __assemble(char *input, char *output){
 	}
 }
 
-void __copy_text(char *input, char *output){
+static void __copy_text(char *input, char *output){
 	int status;
   
 	if(fork() == 0){
@@ -111,7 +109,7 @@ void __copy_text(char *input, char *output){
 	}
 }
 
-void __make_binfile(int fd_input){
+static void __make_binfile(int fd_input){
 	int fdasfile, i = 0;
 	char c, offname[MAX_OFFNAME], asname[MAX_OFFNAME + sizeof(ASSUFIX)], objname[MAX_OFFNAME + sizeof(OBJSUFIX)], *binname;
 
