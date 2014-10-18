@@ -1,5 +1,7 @@
 CC=gcc
 
-all: list.o easyptrace.o 
+make: list.o easyptrace.o 
 	$(CC) -o infectbin infectbin.c list.o easyptrace.o -I.
-	rm *.o
+
+clean:
+	rm -f *.o infectbin
