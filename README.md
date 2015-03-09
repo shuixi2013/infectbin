@@ -27,5 +27,3 @@ Script is a file in the following format:
 - The opcodes are inserted in the specified offsets.
 - Support x86 and x86_64 [require test]
 
-Joao Guilherme aka pl4nkt0n 
-jg.victorino1 [at] gmail
