@@ -2,8 +2,6 @@
  * 
  * list.c  - A simple implementation of linked list and some functions
  * 
- * Joao Guilherme aka pl4nkt0n
- * 
  */
 
 #include "list.h"
