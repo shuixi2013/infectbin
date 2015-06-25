@@ -1,29 +1,26 @@
 infectbin
 =========
+Infectbin is a tool for changing a binary ELF quickly and easily. Just make a file with the proposed changes (with assembly language) and the offsets where they will be applied. This tool will assemble the code and insert it at the desired locations.
 
-Infectbin is a tool that allows changing the instructions in a ELF file.
+Compiling Options
+-----------------
+make  
+make clean
 
-You can modify a runtime process, with some caveats:  
-- you must have permission. In general, the process should be yours.
-- what else?
+Usage
+-----
+infectbin \<elf_file\> \<input_file\>   
+infectbin -p \<pid\>   \<input_file\>
 
-[Compile]:  
-$ make
-
-[Run]:  
-$ infectbin \<file\> \<script\>	  *To patch a ELF file*   
-$ infectbin -p \<pid\> \<script\>	*To patch a  runtime process*
-
-Script is a file in the following format:
+This is how input_file looks like (see samples for more details):
 
 \<offset_in_hex\>   
-\# assembly code
+assembly code
 
-\<other_offset\>  
-\# more assembly code
+\<offset_in_hex\>  
+assembly code
 
-- Mandatory the use of '< >'.
-- The code will be compiled using the GNU assembler (AS) - for this reason you can only use AT&T syntax.
-- The opcodes are inserted in the specified offsets.
-- Support x86 and x86_64 [require test]
-
+Note
+----
+- Use AT&T syntax
+- You can't modify a process that isn't yours
